@@ -15,6 +15,11 @@ export interface NavItem {
   children?: NavItem[];
 }
 
+export interface HeroStat {
+  value: string;
+  label: string;
+}
+
 export interface HeroSlide {
   id: string;
   eyebrow: string;
@@ -23,6 +28,7 @@ export interface HeroSlide {
   image: string;
   ctaLabel: string;
   ctaLink: string;
+  stats: HeroStat[];
 }
 
 export interface Feature {

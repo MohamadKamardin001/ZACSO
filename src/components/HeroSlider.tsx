@@ -1,126 +1,195 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { heroSlides } from '@/data';
+import type { HeroSlide } from '@/types';
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [direction, setDirection] = useState(1);
+  const touchStartX = useRef<number | null>(null);
   const count = heroSlides.length;
 
-  const goNext = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % count);
+  const goTo = useCallback((index: number, dir: number) => {
+    setDirection(dir);
+    setCurrent(((index % count) + count) % count);
   }, [count]);
 
-  const goPrev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + count) % count);
-  }, [count]);
+  const goNext = useCallback(() => goTo(current + 1, 1), [current, goTo]);
+  const goPrev = useCallback(() => goTo(current - 1, -1), [current, goTo]);
 
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(goNext, 6000);
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrent((prev) => (prev + 1) % count);
+    }, 7000);
     return () => clearInterval(timer);
-  }, [isPaused, goNext]);
+  }, [isPaused, count]);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goNext();
+      else goPrev();
+    }
+    touchStartX.current = null;
+  };
 
   return (
     <section
-      className="hero-slider relative w-full overflow-hidden"
-      style={{ height: 'var(--hero-home-height)' }}
+      className="hero-showcase"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
-      {/* Slides */}
-      {heroSlides.map((slide, i) => (
-        <div
-          key={slide.id}
-          className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-          style={{ opacity: i === current ? 1 : 0, pointerEvents: i === current ? 'auto' : 'none' }}
-        >
-          <div className="absolute inset-0">
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+      {/* Background wash */}
+      <div className="hero-showcase-bg" />
+
+      {/* Preview edges — previous and next slide thumbnails */}
+      {count > 2 && (
+        <>
+          <div
+            className="hero-preview hero-preview-left"
+            onClick={goPrev}
+            aria-hidden
+          >
+            <img
+              src={heroSlides[(current - 1 + count) % count].image}
+              alt=""
+              className="hero-preview-img"
+            />
           </div>
           <div
-            className="absolute inset-0"
+            className="hero-preview hero-preview-right"
+            onClick={goNext}
+            aria-hidden
+          >
+            <img
+              src={heroSlides[(current + 1) % count].image}
+              alt=""
+              className="hero-preview-img"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Active slide */}
+      <div className="hero-slide-active">
+        {heroSlides.map((slide, i) => (
+          <div
+            key={slide.id}
+            className="hero-slide-panel"
+            aria-hidden={i !== current}
             style={{
-              background:
-                'linear-gradient(90deg, rgba(13,71,57,0.82) 0%, rgba(13,71,57,0.55) 45%, rgba(13,71,57,0.15) 100%)',
+              opacity: i === current ? 1 : 0,
+              pointerEvents: i === current ? 'auto' : 'none',
+              transform: i === current
+                ? 'translateX(0) scale(1)'
+                : direction > 0
+                  ? 'translateX(60px) scale(0.96)'
+                  : 'translateX(-60px) scale(0.96)',
             }}
-          />
-          <div
-            className="absolute inset-x-0 bottom-0 h-40"
-            style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(13,71,57,0.5) 100%)' }}
-          />
-        </div>
-      ))}
-
-      {/* Content */}
-      <div className="relative h-full flex items-center">
-        <div className="container">
-          <div className="hero-content max-w-2xl">
-            {heroSlides.map((slide, i) => (
-              <div
-                key={slide.id}
-                className="transition-all duration-700"
-                style={{
-                  opacity: i === current ? 1 : 0,
-                  transform: i === current ? 'translateY(0)' : 'translateY(24px)',
-                  position: i === current ? 'relative' : 'absolute',
-                  top: i === current ? 'auto' : 0,
-                  left: i === current ? 'auto' : 0,
-                  pointerEvents: i === current ? 'auto' : 'none',
-                }}
-              >
-                <div className="hero-eyebrow-wrap">
-                  <span className="hero-eyebrow-line" />
-                  <p className="hero-eyebrow">{slide.eyebrow}</p>
-                </div>
-
-                <h1 className="hero-title">{slide.title}</h1>
-
-                <p className="hero-description">{slide.description}</p>
-
-                <div className="hero-actions">
-                  <Link to={slide.ctaLink} className="btn btn-accent hero-cta">
-                    {slide.ctaLabel} <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link to="/about-2" className="btn btn-outline hero-cta-secondary">
-                    Learn More
-                  </Link>
-                </div>
-              </div>
-            ))}
+          >
+            <HeroSlideContent slide={slide} active={i === current} onNext={goNext} />
           </div>
+        ))}
+      </div>
+
+      {/* Bottom controls */}
+      <div className="hero-showcase-controls">
+        <div className="hero-showcase-numbers">
+          {heroSlides.map((slide, i) => (
+            <button
+              key={slide.id}
+              onClick={() => goTo(i, i > current ? 1 : -1)}
+              className={`hero-showcase-number ${i === current ? 'is-active' : ''}`}
+            >
+              <span className="hero-showcase-number-text">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="hero-showcase-number-label">{slide.eyebrow.split('•')[1]?.trim() || slide.eyebrow}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="hero-showcase-arrows">
+          <button onClick={goPrev} aria-label="Previous slide" className="hero-showcase-arrow">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={goNext} aria-label="Next slide" className="hero-showcase-arrow">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroSlideContent({ slide, active, onNext }: { slide: HeroSlide; active: boolean; onNext: () => void }) {
+  return (
+    <div className="hero-slide-inner">
+      {/* Left column — content */}
+      <div className={`hero-slide-left ${active ? 'is-revealed' : ''}`}>
+        <div className="hero-slide-eyebrow">
+          <span className="hero-slide-eyebrow-dot" />
+          {slide.eyebrow}
+        </div>
+
+        <h1 className="hero-slide-title">{slide.title}</h1>
+
+        <p className="hero-slide-desc">{slide.description}</p>
+
+        <div className="hero-slide-stats">
+          {slide.stats.map((stat, i) => (
+            <div className="hero-slide-stat" key={i}>
+              <span className="hero-slide-stat-value">{stat.value}</span>
+              <span className="hero-slide-stat-label">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="hero-slide-actions">
+          <Link to={slide.ctaLink} className="hero-slide-cta-primary">
+            {slide.ctaLabel}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link to="/about-2" className="hero-slide-cta-secondary">
+            Learn More
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
-      {/* Slide counter */}
-      <div className="hero-counter hidden md:flex">
-        <span className="hero-counter-current">{String(current + 1).padStart(2, '0')}</span>
-        <span className="hero-counter-divider" />
-        <span className="hero-counter-total">{String(count).padStart(2, '0')}</span>
-      </div>
-
-      {/* Controls */}
-      <div className="hero-controls hidden md:flex">
-        <button onClick={goPrev} aria-label="Previous slide" className="hero-nav-btn">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button onClick={goNext} aria-label="Next slide" className="hero-nav-btn">
+      {/* Right column — photo with pulsing rings */}
+      <div className={`hero-slide-right ${active ? 'is-revealed' : ''}`}>
+        <div className="hero-rings">
+          <span className="hero-ring hero-ring-1" />
+          <span className="hero-ring hero-ring-2" />
+          <span className="hero-ring hero-ring-3" />
+        </div>
+        <div className="hero-photo-wrap">
+          <img src={slide.image} alt={slide.title} className="hero-photo" />
+        </div>
+        {/* Floating circular arrow on photo */}
+        <button
+          className="hero-photo-arrow"
+          aria-label="Next slide"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNext();
+          }}
+        >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
-
-      {/* Dots */}
-      <div className="hero-dots">
-        {heroSlides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            className={`hero-dot ${i === current ? 'hero-dot-active' : ''}`}
-          />
-        ))}
-      </div>
-    </section>
+    </div>
   );
 }
