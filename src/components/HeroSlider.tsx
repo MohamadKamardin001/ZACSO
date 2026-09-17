@@ -1,195 +1,232 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { heroSlides } from '@/data';
-import type { HeroSlide } from '@/types';
+
+const SLIDE_DURATION = 6500;
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [direction, setDirection] = useState(1);
-  const touchStartX = useRef<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const count = heroSlides.length;
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const goTo = useCallback((index: number, dir: number) => {
-    setDirection(dir);
-    setCurrent(((index % count) + count) % count);
-  }, [count]);
+  const goTo = useCallback(
+    (index: number, dir: number) => {
+      if (index === current || isTransitioning) return;
+      setDirection(dir);
+      setIsTransitioning(true);
+      setCurrent(index);
+      setProgress(0);
+      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      transitionTimer.current = setTimeout(() => setIsTransitioning(false), 900);
+    },
+    [current, isTransitioning],
+  );
 
-  const goNext = useCallback(() => goTo(current + 1, 1), [current, goTo]);
-  const goPrev = useCallback(() => goTo(current - 1, -1), [current, goTo]);
+  const goNext = useCallback(() => {
+    goTo((current + 1) % count, 1);
+  }, [current, count, goTo]);
 
+  const goPrev = useCallback(() => {
+    goTo((current - 1 + count) % count, -1);
+  }, [current, count, goTo]);
+
+  // Auto-advance with progress tracking
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
-      setDirection(1);
-      setCurrent((prev) => (prev + 1) % count);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [isPaused, count]);
+    if (isPaused || isTransitioning) return;
+    const startTime = Date.now();
+    const remaining = SLIDE_DURATION - (progress / 100) * SLIDE_DURATION;
 
-  const onTouchStart = (e: React.TouchEvent) => {
+    const progressTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, ((elapsed + (progress / 100) * SLIDE_DURATION) / SLIDE_DURATION) * 100);
+      setProgress(pct);
+    }, 50);
+
+    const advanceTimer = setTimeout(() => {
+      setProgress(0);
+      goNext();
+    }, remaining);
+
+    return () => {
+      clearInterval(progressTimer);
+      clearTimeout(advanceTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPaused, isTransitioning, current]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'ArrowRight') goNext();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [goPrev, goNext]);
+
+  // Touch / swipe support
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const delta = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(delta) > 50) {
-      if (delta < 0) goNext();
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
       else goPrev();
     }
-    touchStartX.current = null;
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   };
 
   return (
     <section
-      className="hero-showcase"
+      className="hero-slider relative w-full overflow-hidden"
+      style={{ height: 'var(--hero-home-height)' }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Background wash */}
-      <div className="hero-showcase-bg" />
+      {/* Slides with directional slide + fade transition */}
+      {heroSlides.map((slide, i) => {
+        const isActive = i === current;
+        let transform = '';
+        if (isActive) {
+          transform = 'translateX(0) scale(1.05)';
+        } else if (i === (current - 1 + count) % count) {
+          transform = `translateX(${-100 * direction}%) scale(1)`;
+        } else if (i === (current + 1) % count) {
+          transform = `translateX(${100 * direction}%) scale(1)`;
+        } else {
+          transform = `translateX(${100 * direction}%) scale(1)`;
+        }
 
-      {/* Preview edges — previous and next slide thumbnails */}
-      {count > 2 && (
-        <>
-          <div
-            className="hero-preview hero-preview-left"
-            onClick={goPrev}
-            aria-hidden
-          >
-            <img
-              src={heroSlides[(current - 1 + count) % count].image}
-              alt=""
-              className="hero-preview-img"
-            />
-          </div>
-          <div
-            className="hero-preview hero-preview-right"
-            onClick={goNext}
-            aria-hidden
-          >
-            <img
-              src={heroSlides[(current + 1) % count].image}
-              alt=""
-              className="hero-preview-img"
-            />
-          </div>
-        </>
-      )}
-
-      {/* Active slide */}
-      <div className="hero-slide-active">
-        {heroSlides.map((slide, i) => (
+        return (
           <div
             key={slide.id}
-            className="hero-slide-panel"
-            aria-hidden={i !== current}
+            className="hero-slide"
             style={{
-              opacity: i === current ? 1 : 0,
-              pointerEvents: i === current ? 'auto' : 'none',
-              transform: i === current
-                ? 'translateX(0) scale(1)'
-                : direction > 0
-                  ? 'translateX(60px) scale(0.96)'
-                  : 'translateX(-60px) scale(0.96)',
+              transform,
+              opacity: isActive ? 1 : 0,
+              zIndex: isActive ? 2 : 1,
+              pointerEvents: isActive ? 'auto' : 'none',
             }}
           >
-            <HeroSlideContent slide={slide} active={i === current} onNext={goNext} />
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom controls */}
-      <div className="hero-showcase-controls">
-        <div className="hero-showcase-numbers">
-          {heroSlides.map((slide, i) => (
-            <button
-              key={slide.id}
-              onClick={() => goTo(i, i > current ? 1 : -1)}
-              className={`hero-showcase-number ${i === current ? 'is-active' : ''}`}
-            >
-              <span className="hero-showcase-number-text">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <span className="hero-showcase-number-label">{slide.eyebrow.split('•')[1]?.trim() || slide.eyebrow}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="hero-showcase-arrows">
-          <button onClick={goPrev} aria-label="Previous slide" className="hero-showcase-arrow">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button onClick={goNext} aria-label="Next slide" className="hero-showcase-arrow">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HeroSlideContent({ slide, active, onNext }: { slide: HeroSlide; active: boolean; onNext: () => void }) {
-  return (
-    <div className="hero-slide-inner">
-      {/* Left column — content */}
-      <div className={`hero-slide-left ${active ? 'is-revealed' : ''}`}>
-        <div className="hero-slide-eyebrow">
-          <span className="hero-slide-eyebrow-dot" />
-          {slide.eyebrow}
-        </div>
-
-        <h1 className="hero-slide-title">{slide.title}</h1>
-
-        <p className="hero-slide-desc">{slide.description}</p>
-
-        <div className="hero-slide-stats">
-          {slide.stats.map((stat, i) => (
-            <div className="hero-slide-stat" key={i}>
-              <span className="hero-slide-stat-value">{stat.value}</span>
-              <span className="hero-slide-stat-label">{stat.label}</span>
+            <div className="hero-slide-image-wrap">
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className={`hero-slide-image ${isActive ? 'ken-burns' : ''}`}
+              />
             </div>
-          ))}
-        </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(90deg, rgba(13,71,57,0.82) 0%, rgba(13,71,57,0.55) 45%, rgba(13,71,57,0.15) 100%)',
+              }}
+            />
+            <div
+              className="absolute inset-x-0 bottom-0 h-40"
+              style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(13,71,57,0.5) 100%)' }}
+            />
+          </div>
+        );
+      })}
 
-        <div className="hero-slide-actions">
-          <Link to={slide.ctaLink} className="hero-slide-cta-primary">
-            {slide.ctaLabel}
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link to="/about-2" className="hero-slide-cta-secondary">
-            Learn More
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+      {/* Content */}
+      <div className="relative h-full flex items-center" style={{ zIndex: 5 }}>
+        <div className="container">
+          <div className="hero-content max-w-2xl">
+            {heroSlides.map((slide, i) => (
+              <div
+                key={slide.id}
+                className={`hero-text-slide ${i === current ? 'hero-text-active' : ''}`}
+                style={{
+                  pointerEvents: i === current ? 'auto' : 'none',
+                }}
+              >
+                <div className="hero-eyebrow-wrap">
+                  <span className="hero-eyebrow-line" />
+                  <p className="hero-eyebrow">{slide.eyebrow}</p>
+                </div>
+
+                <h1 className="hero-title">{slide.title}</h1>
+
+                <p className="hero-description">{slide.description}</p>
+
+                <div className="hero-actions">
+                  <Link to={slide.ctaLink} className="btn btn-accent hero-cta">
+                    {slide.ctaLabel} <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link to="/about-2" className="btn btn-outline hero-cta-secondary">
+                    Learn More
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Right column — photo with pulsing rings */}
-      <div className={`hero-slide-right ${active ? 'is-revealed' : ''}`}>
-        <div className="hero-rings">
-          <span className="hero-ring hero-ring-1" />
-          <span className="hero-ring hero-ring-2" />
-          <span className="hero-ring hero-ring-3" />
-        </div>
-        <div className="hero-photo-wrap">
-          <img src={slide.image} alt={slide.title} className="hero-photo" />
-        </div>
-        {/* Floating circular arrow on photo */}
+      {/* Progress bar */}
+      <div className="hero-progress-bar" style={{ opacity: isPaused ? 0 : 1 }}>
+        <div className="hero-progress-fill" style={{ width: `${progress}%` }} />
+      </div>
+
+      {/* Slide counter */}
+      <div className="hero-counter hidden md:flex">
+        <span className="hero-counter-current">{String(current + 1).padStart(2, '0')}</span>
+        <span className="hero-counter-divider" />
+        <span className="hero-counter-total">{String(count).padStart(2, '0')}</span>
+      </div>
+
+      {/* Controls */}
+      <div className="hero-controls hidden md:flex">
         <button
-          className="hero-photo-arrow"
-          aria-label="Next slide"
-          onClick={(e) => {
-            e.stopPropagation();
-            onNext();
-          }}
+          onClick={() => setIsPaused((p) => !p)}
+          aria-label={isPaused ? 'Play slideshow' : 'Pause slideshow'}
+          className="hero-nav-btn hero-play-btn"
         >
+          {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+        </button>
+        <button onClick={goPrev} aria-label="Previous slide" className="hero-nav-btn">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <button onClick={goNext} aria-label="Next slide" className="hero-nav-btn">
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
-    </div>
+
+      {/* Dots with progress indicator */}
+      <div className="hero-dots">
+        {heroSlides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i, i > current ? 1 : -1)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`hero-dot ${i === current ? 'hero-dot-active' : ''}`}
+          >
+            {i === current && !isPaused && (
+              <span
+                className="hero-dot-progress"
+                style={{ width: `${progress}%` }}
+              />
+            )}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
