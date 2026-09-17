@@ -206,6 +206,40 @@
     width: 40px;
     height: 400px;
   }
+  .hero-content {
+    padding: 24px 8px 24px 18px;
+  }
+  .hero-eyebrow-line {
+    width: 28px;
+  }
+  .hero-eyebrow {
+    font-size: 15px;
+  }
+  .hero-title {
+    font-size: clamp(30px, 8.5vw, 46px);
+    margin-bottom: 20px;
+  }
+  .hero-description {
+    font-size: 15px;
+    line-height: 1.65;
+    margin-bottom: 28px;
+  }
+  .hero-cta,
+  .hero-cta-secondary {
+    padding: 13px 26px;
+    font-size: 14px;
+  }
+  .hero-dots {
+    bottom: 24px;
+    gap: 6px;
+  }
+  .hero-dot {
+    width: 8px;
+    height: 8px;
+  }
+  .hero-dot-active {
+    width: 24px;
+  }
 }
 
 @layer base {
@@ -345,6 +379,184 @@
     font-weight: 700;
     line-height: 1.08;
     color: var(--color-ink);
+  }
+
+  /* ── Hero slider ── */
+  .hero-content {
+    padding: 36px 12px 36px clamp(24px, 2.8vw, 36px);
+    border-left: 3px solid rgba(216, 233, 59, 0.65);
+  }
+
+  .hero-eyebrow-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .hero-eyebrow-line {
+    flex-shrink: 0;
+    width: 42px;
+    height: 2px;
+    background: #d8e93b;
+    border-radius: 2px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 1.6vw, 22px);
+    font-weight: 700;
+    line-height: 1;
+    color: #d8e93b;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero-title {
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: clamp(38px, 5.8vw, 78px);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.028em;
+    margin-bottom: 28px;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .hero-description {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(16px, 1.3vw, 20px);
+    line-height: 1.75;
+    max-width: 540px;
+    margin-bottom: 40px;
+    letter-spacing: 0.005em;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hero-cta {
+    padding: 15px 34px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    box-shadow: 0 8px 24px rgba(216, 233, 59, 0.25);
+  }
+
+  .hero-cta-secondary {
+    padding: 15px 34px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .hero-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .hero-counter {
+    position: absolute;
+    bottom: 36px;
+    left: var(--container-gutter);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.1em;
+  }
+
+  .hero-counter-current {
+    font-size: 22px;
+    color: #d8e93b;
+  }
+
+  .hero-counter-divider {
+    width: 24px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .hero-counter-total {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .hero-controls {
+    position: absolute;
+    bottom: 32px;
+    right: var(--container-gutter);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-nav-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .hero-nav-btn:hover {
+    background: #d8e93b;
+    color: #123e35;
+    border-color: #d8e93b;
+    transform: translateY(-2px);
+  }
+
+  .hero-dots {
+    position: absolute;
+    bottom: 44px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+    border: none;
+    cursor: pointer;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  .hero-dot:hover {
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .hero-dot-active {
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: #d8e93b;
   }
 
   .campaign-section {

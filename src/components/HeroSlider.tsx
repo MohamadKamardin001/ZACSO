@@ -24,7 +24,7 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
+      className="hero-slider relative w-full overflow-hidden"
       style={{ height: 'var(--hero-home-height)' }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -39,37 +39,51 @@ export default function HeroSlider() {
           <div className="absolute inset-0">
             <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
           </div>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(13,71,57,0.78) 0%, rgba(13,71,57,0.45) 55%, rgba(13,71,57,0.2) 100%)' }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(90deg, rgba(13,71,57,0.82) 0%, rgba(13,71,57,0.55) 45%, rgba(13,71,57,0.15) 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-40"
+            style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(13,71,57,0.5) 100%)' }}
+          />
         </div>
       ))}
 
       {/* Content */}
       <div className="relative h-full flex items-center">
         <div className="container">
-          <div className="max-w-2xl">
+          <div className="hero-content max-w-2xl">
             {heroSlides.map((slide, i) => (
               <div
                 key={slide.id}
                 className="transition-all duration-700"
                 style={{
                   opacity: i === current ? 1 : 0,
-                  transform: i === current ? 'translateY(0)' : 'translateY(20px)',
+                  transform: i === current ? 'translateY(0)' : 'translateY(24px)',
                   position: i === current ? 'relative' : 'absolute',
                   top: i === current ? 'auto' : 0,
                   left: i === current ? 'auto' : 0,
                   pointerEvents: i === current ? 'auto' : 'none',
                 }}
               >
-                <p className="eyebrow text-[#d8e93b] mb-4">{slide.eyebrow}</p>
-                <h1 className="text-white font-extrabold mb-6" style={{ fontSize: 'var(--text-display)', lineHeight: 1.02 }}>
-                  {slide.title}
-                </h1>
-                <p className="text-white/85 text-lg lg:text-xl mb-8 max-w-xl leading-relaxed">{slide.description}</p>
-                <div className="flex flex-wrap gap-4">
-                  <Link to={slide.ctaLink} className="btn btn-accent">
+                <div className="hero-eyebrow-wrap">
+                  <span className="hero-eyebrow-line" />
+                  <p className="hero-eyebrow">{slide.eyebrow}</p>
+                </div>
+
+                <h1 className="hero-title">{slide.title}</h1>
+
+                <p className="hero-description">{slide.description}</p>
+
+                <div className="hero-actions">
+                  <Link to={slide.ctaLink} className="btn btn-accent hero-cta">
                     {slide.ctaLabel} <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link to="/about-2" className="btn btn-outline" style={{ borderColor: 'white', color: 'white' }}>
+                  <Link to="/about-2" className="btn btn-outline hero-cta-secondary">
                     Learn More
                   </Link>
                 </div>
@@ -79,24 +93,31 @@ export default function HeroSlider() {
         </div>
       </div>
 
+      {/* Slide counter */}
+      <div className="hero-counter hidden md:flex">
+        <span className="hero-counter-current">{String(current + 1).padStart(2, '0')}</span>
+        <span className="hero-counter-divider" />
+        <span className="hero-counter-total">{String(count).padStart(2, '0')}</span>
+      </div>
+
       {/* Controls */}
-      <div className="absolute bottom-8 right-8 hidden md:flex items-center gap-3 z-10">
-        <button onClick={goPrev} aria-label="Previous slide" className="w-11 h-11 rounded-full bg-white/15 hover:bg-[#d8e93b] hover:text-[#123e35] text-white flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+      <div className="hero-controls hidden md:flex">
+        <button onClick={goPrev} aria-label="Previous slide" className="hero-nav-btn">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <button onClick={goNext} aria-label="Next slide" className="w-11 h-11 rounded-full bg-white/15 hover:bg-[#d8e93b] hover:text-[#123e35] text-white flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <button onClick={goNext} aria-label="Next slide" className="hero-nav-btn">
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
       {/* Dots */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+      <div className="hero-dots">
         {heroSlides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`transition-all duration-300 rounded-full ${i === current ? 'w-8 h-2 bg-[#d8e93b]' : 'w-2 h-2 bg-white/40 hover:bg-white/70'}`}
+            className={`hero-dot ${i === current ? 'hero-dot-active' : ''}`}
           />
         ))}
       </div>
