@@ -87,6 +87,9 @@
   .work-card {
     height: 190px;
   }
+  .work-section {
+    padding-bottom: clamp(130px, 16vw, 180px);
+  }
   .campaign-grid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -121,7 +124,7 @@
   }
   .work-section {
     padding-right: 16px;
-    padding-bottom: 88px;
+    padding-bottom: 76px;
     padding-left: 16px;
   }
   .work-panel {
@@ -554,7 +557,7 @@
 
   .work-section {
     position: relative;
-    padding: 0 var(--container-gutter) clamp(82px, 9vw, 142px);
+    padding: 0 var(--container-gutter) clamp(165px, 14vw, 230px);
     overflow: hidden;
     background: #fff;
   }
