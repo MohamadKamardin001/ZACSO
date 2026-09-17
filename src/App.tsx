@@ -14,6 +14,7 @@ import FaqPage from '@/pages/FaqPage';
 import DonationPage from '@/pages/DonationPage';
 import VolunteerPage from '@/pages/VolunteerPage';
 import PortfolioPage from '@/pages/PortfolioPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,7 @@ function App() {
             <Route path="/donation-2" element={<DonationPage />} />
             <Route path="/become-volunteers" element={<VolunteerPage />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
-            <Route path="*" element={<HomePage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <Footer />
