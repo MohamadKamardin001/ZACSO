@@ -49,7 +49,7 @@ export default function Header() {
             <a href={`tel:${siteConfig.primaryPhone}`} className="flex items-center gap-2 hover:text-[#d8e93b] transition-colors">
               <Phone className="w-4 h-4" /> {siteConfig.primaryPhone}
             </a>
-            <span className="flex items-center gap-2 text-white/90 font-semibold tracking-wide" style={{ fontSize: '15px', fontFamily: 'var(--font-display)' }}>
+            <span className="flex items-center gap-2 text-white font-bold uppercase" style={{ fontSize: '19px', letterSpacing: '0.08em', fontFamily: 'var(--font-display)' }}>
               Zanzibar Autism Care and Support Organisation
             </span>
           </div>
