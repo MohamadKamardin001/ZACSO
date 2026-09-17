@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Heart, Menu, X, ChevronDown, Mail, Phone, MapPin } from 'lucide-react';
+import { Heart, Menu, X, ChevronDown, Mail, Phone } from 'lucide-react';
 import { navItems, siteConfig } from '@/data';
 import type { NavItem } from '@/types';
 
@@ -49,8 +49,8 @@ export default function Header() {
             <a href={`tel:${siteConfig.primaryPhone}`} className="flex items-center gap-2 hover:text-[#d8e93b] transition-colors">
               <Phone className="w-4 h-4" /> {siteConfig.primaryPhone}
             </a>
-            <span className="flex items-center gap-2 text-white/80">
-              <MapPin className="w-4 h-4" /> {siteConfig.address}
+            <span className="flex items-center gap-2 text-white/90 font-semibold tracking-wide" style={{ fontSize: '15px', fontFamily: 'var(--font-display)' }}>
+              Zanzibar Autism Care and Support Organisation
             </span>
           </div>
           <div className="flex items-center gap-3">
