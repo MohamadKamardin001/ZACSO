@@ -125,20 +125,21 @@
     padding-left: 16px;
   }
   .work-panel {
-    min-height: 535px;
+    min-height: auto;
+    overflow: visible;
   }
   .work-panel-content {
-    padding: 74px 18px 140px;
+    padding: 74px 18px 28px;
   }
   .work-panel-content h2 {
     font-size: clamp(24px, 7vw, 34px);
   }
   .work-card-stack {
-    right: 10px;
-    bottom: -60px;
-    left: 10px;
+    position: static;
+    margin-top: 28px;
+    padding-inline: 4px;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
   .work-card {
     height: 135px;
